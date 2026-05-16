@@ -19,12 +19,7 @@ int main() {
         cout << "Error: No se pudo abrir D1.txt\n"; //error por si el archivo no se pudo abrir
         return 1;
     }
-    
-    while (archivoD1 >> palabras) { //recorremos el archivo para colocar las palabras en el vector
-        //limpieza para los caracteres invisibles
-        if (!palabras.empty() && (palabras.back() == '\r' || palabras.back() == '\n')) palabras.pop_back();
-        if (!palabras.empty()) DiccionarioD1.push_back(palabras);
-    }
+
     archivoD1.close(); //cerramos el archivo
 
     if (DiccionarioD1.empty()) {
