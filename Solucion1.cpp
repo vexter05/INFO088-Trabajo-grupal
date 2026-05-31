@@ -1,69 +1,68 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 
 using namespace std;
+#define OVERHEAD 1.25 //el 25% que se ocupa al expandir el vector, se añade 1 para poder multiplicar por Capacidad
 typedef unsigned char uchar; 
 
 struct Solucion1 {
-    uchar** Array; //Array que contendra todas las palabras
-    float Overhead; //porcentaje que aumenta la capacidad del array exponensialmente cuando se llene
-    int Capacidad; //tamaño limite del array
-    int Contenido; //cantidad de palabras almacenadas en el array
+    vector<uchar*> MiVector; //vector que contendra todas las palabras
+    int Capacidad; //tamaño de palabras reservadas dentro de MiVector
+    int Contenido; //cantidad de palabras almacenadas dentro de MiVector
 
-    //constructor del array
-    Solucion1(int CapInicial, float OverInicial){
-        Capacidad = CapInicial; //coloca la capacidad a un monto inicial dado
-        Overhead = OverInicial; //coloca al overhead como un porcentage dado al inicio 
-        Contenido = 0; //indica que el array inicia vacio
-        Array = new uchar*[Capacidad]; //crea el array vacio con la capacidad inicial
+    //constructor del vector
+    Solucion1(){
+        Capacidad = 20; //coloca la cantidad de palabras reservadas iniciales de MiVector como 20 palabras
+        Contenido = 0; //indica que MiVector inicia vacio
+        MiVector.reserve(Capacidad); //reserva la memoria inicial de las 20 palabras en MiVector
     }
 
-    //desctructor del array
+    //destructor del vector
     ~Solucion1() {
-        for (int i = 0; i < Contenido; ++i) { //borra todos los elementos del array
-            delete[] Array[i];
-        }
-        delete[] Array; //borra el array
+        for (uchar* palabra: MiVector) {
+            delete[] palabra; //borra cada palabra almacenada en MiVector
+        } //como MiVector es parte del struct, se borrara automaticamente cuando se destruya el struct
     }
 
-    //funcion para expandir el array
-    Void Expandir(){
-        int NuevaCap = int (Capacidad * (1.0f * Overhead) + 1); //incrementa la capacidad por el overhead y suma 1
-        uchar** NuevoArray = new uchar*[NuevaCap]; //crea el nuevo array con la nueva capacidad
+    //funcion para expandir el vector
+    void Expandir(){
+        int NuevaCap = int(Capacidad * OVERHEAD); //incrementa la capacidad por el overhead
+        vector<uchar*> NuevoVector; //crea el nuevo vector
+        NuevoVector.reserve(NuevaCap); //reserva la nueva capacidad en el nuevo vector
 
-        for(int i = 0; i < Contenido; ++i) NuevoArray[i] = Array[i]; // Copia las celdas del array anterior
-        delete[] Array; // elimina el array antiguo
-        Array = NuevoArray; //remplaza el array antiguo
-        Capacidad = NuevaCap; //remplaza la capacidad antigua
+        for (int i = 0; i < Contenido; ++i) {
+            NuevoVector.push_back(MiVector[i]); //copia todas las palabras existentes
+        }
 
-        cout << "se expandio el array!\n"; //da un aviso para saver que se expandio el array
+        MiVector = move(NuevoVector); //reemplaza el vector original por el nuevo vector usando move() para mas eficiencia
+        Capacidad = NuevaCap; //actualiza la capacidad
+
+        cout << "se expandio el vector!\n"; //aviso de expansión
     }
 
     //funcion para comparar palabras
-    int Comparar(uchar* p1, uchar* p2)  { //resive 2 arrays con el valor ascii de las palabras
+    int Comparar(uchar* p1, uchar* p2)  { //recibe 2 arrays con el valor ascii de las palabras
         int i = 0;
-        while (p1[i] != '\0' && p2[i] != '\0') { //la funcion retornara 1 si la palabra p1 es mayor
-            if (p1[i] > p2[i]) return 1;         //retorna -1 si p2 es mayor y 0 si ambas palabras son lo mismo
-            if (p1[i] < p2[i]) return -1;
-            ++i;
+        while (p1[i] == p2[i]) { //la funcion corre mientras las palabras sean iguales
+            if (p1[i] == '\0') return 0; //si p1 es vacia, como el while se rompe si no son iguales ambas son iguales y retorna 0
+            ++i; //si aun hay characteres, avanca i
         }
-        if (p1[i] == '\0' && p2[i] == '\0') return 0;
-        if (p1[i] == '\0') return -1;
-        return 1;
+        return (p1[i] > p2[i]) ? 1 : -1; //si p1 es mayor que p2 retorna 1, si p1 es menor que p2 retorna -1
     }
 
-    //funcion para uscar
-    int Buscar(uchar* palabra)  { //la funcion recive un array 
+    //funcion para buscar
+    int Buscar(uchar* palabra)  { //la funcion recibe un array con la palabra que se busca
         int inicio = 0;
-        int fin = Contenido - 1; //toma el index del fin y el inicio del array
+        int fin = Contenido - 1; //toma el indice del fin y el inicio del vector
 
         while (inicio <= fin) { //empieza una busqueda binaria
-            int mitad = inicio + (fin - inicio) / 2; //saca la mitad de los elementos del array
-            int comp = Comparar(Array[mitad], palabra); //compara las dos palabras entre si
+            int mitad = inicio + (fin - inicio) / 2; //saca la mitad de los elementos dentro de MiVector
+            int comp = Comparar(MiVector[mitad], palabra); //compara las dos palabras entre si
 
             if (comp == 0) { //si encontramos la palabra avisa que se encontro la palabra y en que indice
-                cout << "la palabra se encuentra en el indice " << mitad << " del array!\n";
+                cout << "la palabra se encuentra en el indice " << mitad << " del vector!\n";
                 return mitad;  
             }
             if (comp == -1) inicio = mitad + 1; //la palabra es mas grande que la mitad
@@ -73,45 +72,42 @@ struct Solucion1 {
         return -1; //return para la funcion que lo llame
     }
 
-    // funcion para insertar palabras
+    //funcion para insertar palabras
     void insertar(uchar* nuevaPalabra) { //se le da una palabra
-        if (Contenido == Capacidad) expandir(); //verifica y expande el array si no hay espacio
         
-        int i = Contenido - 1; //da el indice de la ultima palabra en el array
-        while (i >= 0 && Comparar(Array[i], nuevaPalabra) > 0) { //ve si la palabra nueva es mayor o menor que la ultima 
-            Array[i + 1] = Array[i]; // si la nueva palabra es menor, hace espacio
-            --i; // y se mueve a la palabra antes de esa
+        int i = Contenido - 1; // indice de la ultima palabra en el vector
+        while (i >= 0 && Comparar(MiVector[i], nuevaPalabra) > 0) { //ve si la nueva palabra es menor
+            MiVector[i + 1] = MiVector[i]; //muebe la palabra si en menor
+            --i; //se mueve a la palabra anterior
         }
 
-        Array[i + 1] = nuevaPalabra; //añade la palabra nueva en la celda correspondiente
-        ++Contenido; //aumenta la cantidad de palabras en el array
-        cout << nuevaPalabra << " añadida al array!\n" //avisa que fue añadida con exito
+        MiVector[i + 1] = nuevaPalabra; //añade la palabra nueva en la celda correspondiente
+        ++Contenido; //aumenta la cantidad de palabras en el vector
+        cout << nuevaPalabra << " añadida al vector!\n"; //avisa que fue añadida con exito
+        if (Contenido == Capacidad) Expandir(); //verifica y expande el vector si no hay espacio despues de añadir la nueva palabra
     }
 
     // funcion de eliminar palabra
-    bool eliminar( uchar* palabra) { //recive una palabra a eliminar
-        int indice = Buscar(palabra); // verifique si existe
-        
+    bool eliminar(uchar* palabra) { //recibe una palabra a eliminar
+        int indice = Buscar(palabra); //verifica si existe la palabra en MiVector
+
         if (indice == -1) { //la palabra no existe
-            cout << "la palabra no esta en el array!\n" //avisa que no existe
-            return false; //hace un return para acabar el programa antes
+            cout << "la palabra no esta en el vector!\n"; //avisa que no existe
+            return false; //termina antes y retorna falso
         }
 
-        delete[] Array[indice]; //borra el indice del array, creando un indice vacio
-        for (int i = indice; i < Contenido - 1; ++i) Array[i] = Array[i + 1];
-        //mueve las palabras siguientes para llenar el espacio vacio
-        //no es necesario reducir la capacidad del array, solo se reduce el contenido
+        delete[] MiVector[indice]; //borra la palabra en el indice, creando un agujero en MiVector
+        MiVector.erase(MiVector.begin() + indice); //se ocupa erase para eliminar el agujero y mover las palabras efficientemente
 
-        --Contenido; //disminuye la cantidad de palabras en el array
-        cout << palabra << " eliminada del array!\n" //avisa que se elimino con exito
+        --Contenido; //disminuye la cantidad de palabras en el vector
+        cout << palabra << " eliminada del vector!\n"; // avisa que se elimino con exito
         return true;
     }
 
-    //funcion para mostrar las palabras del array
+    //funcion para mostrar las palabras del vector
     void mostrar()  {
-        cout << "Las palabras del array son: [ ";
-        for (int i = 0; i < Contenido; ++i) cout << Array[i] << " ";
-        
-        cout << "]" << " (Capacidad del Array: " << Contenido << "/" << Capacidad << ")\n";
+        cout << "Las palabras del vector son: [ ";
+        for (int i = 0; i < Contenido; ++i) cout << MiVector[i] << " ";
+        cout << "]" << " (Capacidad del Vector: " << Contenido << "/" << Capacidad << ")\n";
     }
-}
+};
