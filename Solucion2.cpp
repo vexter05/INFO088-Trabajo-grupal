@@ -1,245 +1,299 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cmath>
 
 using namespace std;
+typedef unsigned char uchar;
 
-//estructura de los nodos
-struct Nodo {
-    string key;
+struct Nodo { //estructura de un nodo
+    uchar* key; //contine la palabra almacenada
+    Nodo* next; //puntero al siguiente nodo en el mismo nivel
+    Nodo* abajo; //puntero al mismo nodo del nivel inferior
 
-    Nodo* next;
-    Nodo* bajo;
+    //Constructor de un nodo
+    Nodo(uchar* palabra = nullptr) //si no se da palabra es nullptr
+        : key(nullptr), next(nullptr), abajo(nullptr) {  //punteros inician en nullptr
+        if (palabra) {
+            size_t len = 0;
+            while (palabra[len]) { //calcula la longitud de la palabra
+                len++;
+            }
+            key = new uchar[len + 1]; //reserva memoria para la palabra
+            for (size_t i = 0; i <= len; ++i) {
+                key[i] = palabra[i]; //copia la palabra al nodo
+            }
+        }
+    }
 
-    Nodo(string k) {
-        key = k;
-        next = nullptr;
-        bajo = nullptr;
+    //Destructor de un nodo
+    ~Nodo() {
+        delete[] key;
     }
 };
 
-class ListaGrid {
-private:
-    vector<Nodo*> niveles; // da niveles de tope a fondo
-    int k;
+class Grilla {
+    int k; //int k para saltos en niveles superiores
+    vector<Nodo*> heads; //vector de punteros a los nodos cabeza de cada nivel
 
-public: //el valor k para dar saltos entre niveles (generalmente en potencias de 2)
-    ListaGrid(int valorK) {
-        k = valorK;
+    static int Comparar(uchar* a, uchar* b) { //recibe dos palanbras a comparar, debe ser statico para evitar problemas con punteros a miembros
+        while (*a && *b && *a == *b) { //mientras ambos caracteres sean iguales y no sean el fin de la cadena
+            a++;
+            b++; //avanza a la siguiente posición en ambas palabras
+        }
+        return *a < *b ? -1 : (*a > *b ? 1 : 0); //retorna -1 si a < b, 1 si a > b, o 0 si son iguales
     }
 
-    //funcion buscar
-
-    bool Buscar(string palabraBuscar) { //nos dan la palabra a buscar
-        if (niveles.empty()) {
-            cout << "los niveles estan vacios!\n"; //si los niveles estan vacios nos da falso y avisa
-            return false; 
+    uchar* Duplicar(uchar* palabra) { //crea una copia dinámica de la palabra dada (mismo proceso que el constructor de Nodo)
+        size_t len = 0;
+        while (palabra[len]) {
+            len++;
         }
-
-        Nodo* nivActual = niveles.back(); // nos colocamos en el nivel del tope
-
-        while (nivActual) { //mientras el nivel actual sea valido, corre el programa
-
-            while (nivActual->next && nivActual->next->key <= palabraBuscar) {
-
-                nivActual = nivActual->next; //si es que la palabra siguiente es menor a la palabra que se
-            }                                //busca, pasa al siguiente nodo del nivel
-
-            if (nivActual->key == palabraBuscar){ //si la palabra se encontro, lo anuncia
-                cout << "palabra encontrada!\n";
-                return true;
-            }
-            nivActual = nivActual->bajo; //baja de nivel si es que no se encontro la palabra en el nivel actual
+        uchar* copia = new uchar[len + 1];
+        for (size_t i = 0; i <= len; ++i) {
+            copia[i] = palabra[i]; 
         }
-
-        cout << "no se encontro la palabra\n";
-        return false;
+        return copia;
     }
 
-    //funcion de insertar
-    void insertarFondo(string palabra) {
-
-        if (niveles.empty()) { //si todo esta vacio, añade la palabra y crea los niveles
-            Nodo* nuevoNodo = new Nodo(palabra);
-            niveles.push_back(nuevoNodo);
-            return;
-        }
-
-        Nodo* frente = niveles[0]; //empezamos en el nivel del fondo porque tiene todas las llaves
-        
-        if (palabra < frente->key) {
-            Nodo* nuevoNodo = new Nodo(palabra);
-            nuevoNodo->next = frente;
-            niveles[0] = nuevoNodo; //inserta la palabra al inicio y lo anuncia
-
-            cout << "palabra añadida!\n"
-
-            ReconstruirNiveles(); //reconstruye los niveles
-            return;
-        }
-
-        Nodo* nivActual = frente; //ocupamos el nuevo nodo para buscar el lugar para la palabra
-
-        while (nivActual->next && nivActual->next->key < palabra) {
-
-            nivActual = nivActual->next; //mueve el nodo si aun no encuentra el lugar correcto
-        }
-
-        if (nivActual->key == palabra) return;
-        if (nivActual->next && nivActual->next->key == palabra) return;
-
-        Nodo* nuevoNodo = new Nodo(palabra);
-
-        nuevoNodo->next = nivActual->next;
-        nivActual->next = nuevoNodo;
-
-        ReconstruirNiveles();
+    Nodo* CrearNodo(uchar* palabra) { //crea un nodo con la palabra dada
+        Nodo* nodo = new Nodo(); //crea un nuevo nodo
+        nodo->key = Duplicar(palabra); //recive copia de la palabra
+        nodo->next = nullptr; //inicia ambos punteros como nullptr
+        nodo->abajo = nullptr;
+        return nodo; //retorna el nodo
     }
 
-    // =========================
-    // DELETE
-    // =========================
-    void borrar(string palabra) {
-
-        if (niveles.empty()) return;
-
-        Nodo* frente = niveles[0];
-
-        // delete first node
-        if (frente->key == palabra) {
-            niveles[0] = frente->next;
-            delete frente;
-
-            ReconstruirNiveles();
-            return;
+    int Niveles(Nodo* head) const { //cuenta el número de nodos en el nivel dado por head
+        int count = 0;
+        while (head) {
+            count++;
+            head = head->next;
         }
-
-        Nodo* nivActual = frente;
-
-        while (nivActual->next && nivActual->next->key != palabra) {
-
-            nivActual = nivActual->next;
-        }
-
-        if (nivActual->next) {
-            Nodo* temp = nivActual->next;
-
-            nivActual->next = temp->next;
-
-            delete temp;
-        }
-
-        ReconstruirNiveles();
+        return count;
     }
 
-    // =========================
-    // REBUILD UPPER LEVELS
-    // =========================
-    void ReconstruirNiveles() {
+    void LimpiarNivel(int nivel) { //elimina todos los nodos en el nivel dado
+        Nodo* actual = heads[nivel]; //obtiene el nodo cabeza del nivel
+        while (actual) { //elimina cada nodo del nivel
+            Nodo* next = actual->next;
+            delete actual;
+            actual = next;
+        }
+        heads[nivel] = nullptr; //borra la referencia al nivel
+    }
 
-        Nodo* fondo = niveles[0];
+public:
+    Grilla(int k_variable){ //constructor de grilla, recive k
+        k = k_variable; //define k y crea nivel base vacío
+        heads.push_back(nullptr);
+    }
 
-        niveles.clear();
-        niveles.push_back(fondo);
+    ~Grilla() { //destructor de grilla
+        for (size_t i = 0; i < heads.size(); ++i) {
+            LimpiarNivel((int)i); //limpia cada nivel
+        }
+    }
 
-        vector<Nodo*> nivAnterior;
-        Nodo* actual = fondo;
+    void InsertarBase(uchar* palabra) { //inserta la palabra en el nivel base lexográficamente
+        if (heads.empty()) {
+            heads.push_back(nullptr); //si no hay niveles, crea el nivel base
+        }
 
-        while (actual) {
-            nivAnterior.push_back(actual);
+        Nodo* newNode = CrearNodo(palabra); //crea un nuevo nodo con la palabra dada
+        Nodo* actual = heads[0]; //puntero para recorrer el nivel base
+        Nodo* anterior = nullptr; //puntero para mantener el nodo anterior
+
+        while (actual && Comparar(actual->key, palabra) < 0) { //compara la palabra con la siguiente y para al colocarla en orden
+            anterior = actual; 
             actual = actual->next;
         }
 
-        while ((int)nivAnterior.size() > k) {
-
-            vector<Nodo*> NodosNivArriba;
-
-            Nodo* frenteArriba = nullptr;
-            Nodo* colaArriba = nullptr;
-
-            for (int i = 0;
-                 i < nivAnterior.size();
-                 i += k) {
-
-                Nodo* muestra = nivAnterior[i];
-
-                Nodo* nodoArriba =
-                    new Nodo(muestra->key);
-
-                nodoArriba->bajo = muestra;
-
-                if (!frenteArriba) {
-                    frenteArriba = nodoArriba;
-                    colaArriba = nodoArriba;
-                } else {
-                    colaArriba->next = nodoArriba;
-                    colaArriba = nodoArriba;
-                }
-
-                NodosNivArriba.push_back(nodoArriba);
-            }
-
-            niveles.push_back(frenteArriba);
-
-            nivAnterior = NodosNivArriba;
+        if (!anterior) { //si no hay nodo anterior, la nueva palabra es la nueva cabeza del nivel base
+            newNode->next = heads[0];
+            heads[0] = newNode;
+        } else { //si hay anterior, inserta el nodo normalmente
+            newNode->next = actual; 
+            anterior->next = newNode;
         }
     }
 
-    // =========================
-    // PRINT
-    // =========================
-    void mostrarNiveles() {
+    void ConstruirNiveles() {//construye los niveles superiores a partir del nivel base
+        while (heads.size() > 1) { //si hay más de un nivel, limpia el nivel superior y lo elimina
+            LimpiarNivel((int)heads.size() - 1);
+            heads.pop_back();
+        }
 
-        for (int i = niveles.size() - 1;
-             i >= 0;
-             i--) {
-
-            cout << "nivel " << i + 1 << ": ";
-
-            Nodo* actual = niveles[i];
-
-            while (actual) {
-                cout << actual->key << " ";
-                actual = actual->next;
+        int nivel = 0;
+        while (true) { //construye niveles mientras el nivel actual tenga más nodos que k
+            Nodo* debajo = heads[nivel];
+            if (!debajo) { //si el nivel debajo está vacío, no se pueden construir más niveles
+                break;
             }
 
+            int size = Niveles(debajo); // Si el tamaño es menor o igual a k, no necesitamos más niveles.
+            if (size <= k) {
+                break;
+            }
+
+            Nodo* actual = debajo; //punteros para construir el nuevo nivel
+            Nodo* newHead = nullptr;
+            Nodo* anterior = nullptr;
+            int index = 1;
+
+            while (actual) { //recorre el nivel debajo y selecciona nodos para el nuevo nivel según k
+                if (index == 1 || ((index - 1) % k) == 0) { //si el indice es 1 o multiplo de k, toma el nodo para el nivel
+                    Nodo* copia = CrearNodo(actual->key); //crea una copia del nodo actual para el nuevo nivel
+                    copia->abajo = actual;
+                    if (anterior) {
+                        anterior->next = copia;
+                    } else {
+                        newHead = copia;
+                    }
+                    anterior = copia;
+                }
+                actual = actual->next; //avanza al siguiente nodo en el nivel debajo
+                index++; //incrementa el indice
+            }
+
+            heads.push_back(newHead); //agrega el nuevo nivel a la grilla
+            nivel++;
+        }
+    }
+
+    bool Buscar(uchar* palabra) const { //busca la palabra en la grilla
+        if (heads.empty() || !heads.back()) { //si no hay niveles o el nivel superior está vacío, la palabra no se encuentra
+            cout << "No encontrado" << endl;
+            return false;
+        }
+
+        int nivel = (int)heads.size() - 1; //comienza la búsqueda desde el nivel mas alto
+        Nodo* actual = heads[nivel];
+
+        while (nivel >= 0 && actual) { //mientras haya niveles y nodos para revisar
+            while (actual->next && Comparar(actual->next->key, palabra) <= 0) {
+                actual = actual->next; //anaza al siguiente nodo hasta que la clave sea mayor que la actual o llegue a fin
+            }
+
+            if (Comparar(actual->key, palabra) == 0) { //revisas si encuentra la palabra en el nodo actual
+                cout << "Encontrado" << endl;
+                return true;
+            }
+
+            if (nivel == 0) { //si llegamos a la base y no encontramos la palabra, se detiene la búsqueda en este while
+                break;
+            }
+
+            actual = actual->abajo ? actual->abajo : heads[nivel - 1]; //deciende al siguiente nivel
+            nivel--;
+        }
+
+        while (actual && Comparar(actual->key, palabra) < 0) { //sigue buscando en el nivel base hasta encontrar o no a la palabra
+            actual = actual->next;
+        }
+
+        if (actual && Comparar(actual->key, palabra) == 0) { //si se encontro la palabra, avisa
+            cout << "Encontrado" << endl;
+            return true;
+        }
+
+        cout << "No encontrado" << endl; //no se encuentra la palabra y lo avisa
+        return false;
+    }
+
+    void Eliminar(uchar* palabra) {
+        if (heads.empty() || !heads[0]) { //si no hay niveles, no se puede eliminar nada
+            cout << "key no encontrada" << endl;
+            return;
+        }
+
+        int numNiveles = (int)heads.size();
+        
+        vector<Nodo*> anteriores(numNiveles, nullptr); //vector para almacenar los nodos anteriores a la palabra en cada nivel
+        vector<Nodo*> encontrados(numNiveles, nullptr); 
+
+        int level = numNiveles - 1; //comienza la búsqueda desde el nivel más alto
+        Nodo* current = heads[level];
+
+        while (level >= 0) { //mientras haya niveles para revisar
+            Nodo* prev = nullptr;
+            
+            while (current && Comparar(current->key, palabra) < 0) { //avanza al siguiente nodo hasta que sea mayor o igual
+                prev = current;
+                current = current->next;
+            }
+
+            anteriores[level] = prev; // Almacena el nodo anterior al nodo actual en este nivel
+
+            if (current && Comparar(current->key, palabra) == 0) { //si el nodo actual es la palabra, se almacena
+                encontrados[level] = current;
+            }
+
+            if (level > 0) { //si no estamos en el nivel base, descendemos al siguiente nivel
+                current = prev ? prev->abajo : heads[level - 1];
+            }
+            level--;
+        }
+
+
+        if (!encontrados[0]) { //si no se encontró la palabra en el nivel base, no se puede eliminar
+            cout << "key no encontrada" << endl;
+            return;
+        }
+
+        Nodo* target = encontrados[0]; //como sabemos que la palabra existe en el nivel base, target es el nodo a eliminar
+        Nodo* successor = target->next;
+
+        if (anteriores[0]) { //si hay un nodo anterior en el nivel base, si no el sucesor se convierte en la cabeza base
+            anteriores[0]->next = successor;
+        } else {
+            heads[0] = successor;
+        }
+        delete target; //borra el nodo del nivel base
+
+        for (int i = 1; i < numNiveles; i++) { //actualiza los niveles superiores para mostrar el siguiente nodo al eliminado
+            Nodo* nodoAModificar = encontrados[i]; //si el nodo esta en un nivel superior, se crea un nodo a modificar
+            
+            if (nodoAModificar) { //si el nodo existe, se busca su sucesor para reemplazarlo si existe
+                if (successor) {
+                    delete[] nodoAModificar->key; //borra la clave del nodo a modificar para reemplazarla por la del sucesor
+                    nodoAModificar->key = Duplicar(successor->key);
+                    
+                    if (i == 1) { //se remplaza el abajo del nodo si es el nivel 1
+                        nodoAModificar->abajo = successor;
+                    }
+                } else { //si no hay sucesor, ve si hay nodo anterior para actualizar el next
+                    if (anteriores[i]) {
+                        anteriores[i]->next = nodoAModificar->next;
+                    } else { //si no hay nodo anterior, el siguiente nodo se convierte en la nueva cabeza del nivel
+                        heads[i] = nodoAModificar->next;
+                    }
+                    delete nodoAModificar; //borra el nodo a modificar al fin del proceso
+                }
+            }
+        }
+
+        while (heads.size() > 1 && heads.back() == nullptr) { //si el nivel superior esta vacio, lo borra y repite el proceso
+            heads.pop_back();
+        }
+
+        cout << "El nodo ha sido borrado" << endl; //avisa que el nodo ha sido eliminado
+    }
+
+    void printGrid() const { //imprime la grilla desde el nivel más alto hasta el nivel base
+        for (int nivel = (int)heads.size() - 1; nivel >= 0; --nivel) { //recorre cada nivel desde el más alto
+            cout << "Nivel " << nivel << ": ";
+            Nodo* actual = heads[nivel];
+            while (actual) { //imprime cada nodo del nivel
+                cout << (const char*)actual->key;
+                if (actual->next) {
+                    cout << " -> ";
+                }
+                actual = actual->next;
+            }
             cout << endl;
         }
     }
 };
 
 int main() {
-
-    ListaGrid grid(4);
-
-    grid.insertarFondo("manzana");
-    grid.insertarFondo("pato");
-    grid.insertarFondo("tiburon");
-    grid.insertarFondo("zorro");
-    grid.insertarFondo("perro");
-    grid.insertarFondo("banana");
-    grid.insertarFondo("mouraton");
-    grid.insertarFondo("tigre");
-    grid.insertarFondo("lobo");
-
-    grid.mostrarNiveles();
-
-    cout << endl;
-
-    cout << "Buscar perro: "
-         << grid.Buscar("perro")
-         << endl;
-
-    cout << "Buscar zebra: "
-         << grid.Buscar("zebra")
-         << endl;
-
-    cout << endl;
-
-    grid.borrar("manzana");
-
-    grid.mostrarNiveles();
-
-    return 0;
 }
