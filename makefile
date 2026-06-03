@@ -1,15 +1,12 @@
 CXX = g++
-CXXFLAGS = -Wall -std=c++11
+CXXFLAGS = -Wall -std=c++11 -O3 -march=native
 
 TARGET = programa_test
-
-DEPS = Solucion1.cpp Solucion2.cpp D1.txt D2.txt
-
 SRCS = main.cpp
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS) $(DEPS)
+$(TARGET): $(SRCS)
 	$(CXX) $(CXXFLAGS) $(SRCS) -o $(TARGET)
 
 
