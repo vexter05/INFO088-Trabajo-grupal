@@ -237,9 +237,6 @@ int main() {
     cout << "D2Buscar size: " << D2Buscar.size() << "\n";
     cout << "D2Insertar size: " << D2Insertar.size() << "\n";
     cout << "D2Eliminar size: " << D2Eliminar.size() << "\n";
-
-    // Ejecuta la prueba que construye un Solucion1 a partir de ArregloD1 y mide el tiempo
-    testSolucion1(ArregloD1, D2Insertar, D2Eliminar, D2Buscar, static_cast<int>(ArregloD1.size()));
-
+    
     return 0;
 }
