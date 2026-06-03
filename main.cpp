@@ -25,10 +25,10 @@ static uchar* ucharAString(const string& s) { //convierte un string a un arreglo
 // Mide el tiempo en milisegundos que tarda en construir una instancia de Solucion1,
 // el tiempo total de insertar D2Insertar, el tiempo total de eliminar D2Eliminar
 // y el tiempo promedio de búsqueda de D2Buscar.
-void testSolucion1(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector<uchar*>& D2Eliminar, vector<uchar*>& D2Buscar, int initialCap) {
+void testSolucion1(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector<uchar*>& D2Eliminar, vector<uchar*>& D2Buscar, int capInicial) {
     using namespace chrono;
-    auto start = high_resolution_clock::now();
-    Solucion1 sol(initialCap);
+    auto consInicio = high_resolution_clock::now();
+    Solucion1 sol(capInicial);
 
     for (auto p : ArregloD1) {
         size_t len = 0;
@@ -38,11 +38,11 @@ void testSolucion1(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector
         sol.insertar(dup);
     }
 
-    auto end = high_resolution_clock::now();
-    auto buildMs = duration_cast<milliseconds>(end - start).count();
+    auto consFin = high_resolution_clock::now();
+    auto consMs = duration_cast<milliseconds>(consFin - consInicio).count();
 
-    int insertedCount = 0;
-    auto insertStart = high_resolution_clock::now();
+    int insertCuenta = 0;
+    auto insertInicio = high_resolution_clock::now();
     for (auto palabra : D2Insertar) {
         int before = sol.Contenido;
         size_t len = 0;
@@ -51,38 +51,38 @@ void testSolucion1(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector
         for (size_t k = 0; k <= len; ++k) dup[k] = palabra[k];
         sol.insertar(dup);
         if (sol.Contenido == before + 1) {
-            ++insertedCount;
+            ++insertCuenta;
         } else {
             delete[] dup;
         }
     }
-    auto insertEnd = high_resolution_clock::now();
-    auto totalInsertMs = duration_cast<milliseconds>(insertEnd - insertStart).count();
+    auto insertFin = high_resolution_clock::now();
+    auto totalInsertMs = duration_cast<milliseconds>(insertFin - insertInicio).count();
 
-    int deletedCount = 0;
-    auto deleteStart = high_resolution_clock::now();
+    int elimCuenta = 0;
+    auto elimInicio = high_resolution_clock::now();
     for (auto palabra : D2Eliminar) {
-        if (sol.eliminar(palabra)) ++deletedCount;
+        if (sol.eliminar(palabra)) ++elimCuenta;
     }
-    auto deleteEnd = high_resolution_clock::now();
-    auto totalDeleteMs = duration_cast<milliseconds>(deleteEnd - deleteStart).count();
+    auto elimFin = high_resolution_clock::now();
+    auto elimMs = duration_cast<milliseconds>(elimFin - elimInicio).count();
 
-    int foundCount = 0;
-    auto searchStart = high_resolution_clock::now();
+    int buscarCuenta = 0;
+    auto buscarInicio = high_resolution_clock::now();
     for (auto palabra : D2Buscar) {
-        if (sol.Buscar(palabra) != -1) ++foundCount;
+        if (sol.Buscar(palabra) != -1) ++buscarCuenta;
     }
-    auto searchEnd = high_resolution_clock::now();
-    auto totalSearchUs = duration_cast<microseconds>(searchEnd - searchStart).count();
-    double averageSearchUs = static_cast<double>(totalSearchUs) / D2Buscar.size();
+    auto buscarFin = high_resolution_clock::now();
+    auto buscarTotal = duration_cast<microseconds>(buscarFin - buscarInicio).count();
+    double buscarProMs = static_cast<double>(buscarTotal) / D2Buscar.size();
 
-    cout << "testSolucion1: tiempo de construcción = " << buildMs << " ms\n";
+    cout << "testSolucion1: tiempo de construcción = " << consMs << " ms\n";
     cout << "testSolucion1: tiempo total de insercion = " << totalInsertMs << " ms\n";
-    cout << "testSolucion1: palabras insertadas = " << insertedCount << "\n";
-    cout << "testSolucion1: tiempo total de eliminacion = " << totalDeleteMs << " ms\n";
-    cout << "testSolucion1: palabras eliminadas = " << deletedCount << "\n";
-    cout << "testSolucion1: tiempo promedio por búsqueda = " << averageSearchUs << " us\n";
-    cout << "testSolucion1: palabras encontradas = " << foundCount << "\n";
+    cout << "testSolucion1: palabras insertadas = " << insertCuenta << "\n";
+    cout << "testSolucion1: tiempo total de eliminacion = " << elimMs << " ms\n";
+    cout << "testSolucion1: palabras eliminadas = " << elimCuenta << "\n";
+    cout << "testSolucion1: tiempo promedio por búsqueda = " << buscarProMs << " us\n";
+    cout << "testSolucion1: palabras encontradas = " << buscarCuenta << "\n";
 
     for (auto ptr : ArregloD1) delete[] ptr;
     ArregloD1.clear();
@@ -107,7 +107,7 @@ void testSolucion2(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector
 
     Grilla gr(k_usuario);
 
-    auto start = high_resolution_clock::now();
+    auto consInicio = high_resolution_clock::now();
 
     // Construcción inicial: insertar en base y luego construir niveles
     for (auto p : ArregloD1) {
@@ -119,11 +119,11 @@ void testSolucion2(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector
         delete[] dup; // Grilla duplica internamente
     }
     gr.ConstruirNiveles();
-    auto end = high_resolution_clock::now();
-    auto buildMs = duration_cast<milliseconds>(end - start).count();
+    auto consFin = high_resolution_clock::now();
+    auto consMs = duration_cast<milliseconds>(consFin - consInicio).count();
 
-    int insertedCount = 0;
-    auto insertStart = high_resolution_clock::now();
+    int insertCuenta = 0;
+    auto insertInicio = high_resolution_clock::now();
     for (auto palabra : D2Insertar) {
         // sólo insertar si no existe
         if (!gr.Buscar(palabra)) {
@@ -133,39 +133,39 @@ void testSolucion2(vector<uchar*>& ArregloD1, vector<uchar*>& D2Insertar, vector
             for (size_t i = 0; i <= len; ++i) dup[i] = palabra[i];
             gr.InsertarBaseConNiveles(dup);
             delete[] dup;
-            ++insertedCount;
+            ++insertCuenta;
         }
     }
-    auto insertEnd = high_resolution_clock::now();
-    auto totalInsertMs = duration_cast<milliseconds>(insertEnd - insertStart).count();
+    auto insertFin = high_resolution_clock::now();
+    auto totalInsertMs = duration_cast<milliseconds>(insertFin - insertInicio).count();
 
-    int deletedCount = 0;
-    auto deleteStart = high_resolution_clock::now();
+    int elimCuenta = 0;
+    auto elimInicio = high_resolution_clock::now();
     for (auto palabra : D2Eliminar) {
         if (gr.Buscar(palabra)) {
             gr.Eliminar(palabra);
-            ++deletedCount;
+            ++elimCuenta;
         }
     }
-    auto deleteEnd = high_resolution_clock::now();
-    auto totalDeleteMs = duration_cast<milliseconds>(deleteEnd - deleteStart).count();
+    auto elimFin = high_resolution_clock::now();
+    auto elimMs = duration_cast<milliseconds>(elimFin - elimInicio).count();
 
-    int foundCount = 0;
-    auto searchStart = high_resolution_clock::now();
+    int buscarCuenta = 0;
+    auto buscarInicio = high_resolution_clock::now();
     for (auto palabra : D2Buscar) {
-        if (gr.Buscar(palabra)) ++foundCount;
+        if (gr.Buscar(palabra)) ++buscarCuenta;
     }
-    auto searchEnd = high_resolution_clock::now();
-    auto totalSearchUs = duration_cast<microseconds>(searchEnd - searchStart).count();
-    double averageSearchUs = static_cast<double>(totalSearchUs) / D2Buscar.size();
+    auto buscarFin = high_resolution_clock::now();
+    auto buscarTotal = duration_cast<microseconds>(buscarFin - buscarInicio).count();
+    double buscarProMs = static_cast<double>(buscarTotal) / D2Buscar.size();
 
-    cout << "testSolucion2: tiempo de construcción = " << buildMs << " ms\n";
+    cout << "testSolucion2: tiempo de construcción = " << consMs << " ms\n";
     cout << "testSolucion2: tiempo total de insercion = " << totalInsertMs << " ms\n";
-    cout << "testSolucion2: palabras insertadas = " << insertedCount << "\n";
-    cout << "testSolucion2: tiempo total de eliminacion = " << totalDeleteMs << " ms\n";
-    cout << "testSolucion2: palabras eliminadas = " << deletedCount << "\n";
-    cout << "testSolucion2: tiempo promedio por búsqueda = " << averageSearchUs << " us\n";
-    cout << "testSolucion2: palabras encontradas = " << foundCount << "\n";
+    cout << "testSolucion2: palabras insertadas = " << insertCuenta << "\n";
+    cout << "testSolucion2: tiempo total de eliminacion = " << elimMs << " ms\n";
+    cout << "testSolucion2: palabras eliminadas = " << elimCuenta << "\n";
+    cout << "testSolucion2: tiempo promedio por búsqueda = " << buscarProMs << " us\n";
+    cout << "testSolucion2: palabras encontradas = " << buscarCuenta << "\n";
 
     // liberar memoria de los vectores recibidos
     for (auto ptr : ArregloD1) delete[] ptr;
@@ -237,6 +237,6 @@ int main() {
     cout << "D2Buscar size: " << D2Buscar.size() << "\n";
     cout << "D2Insertar size: " << D2Insertar.size() << "\n";
     cout << "D2Eliminar size: " << D2Eliminar.size() << "\n";
-    
+
     return 0;
 }
