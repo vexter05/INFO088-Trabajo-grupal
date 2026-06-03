@@ -110,6 +110,7 @@ struct Solucion1 {
 
     //funcion para insertar palabras
     void insertar(uchar* nuevaPalabra) { //recibe una palabra a insertar
+        if (Contenido == Capacidad) Expandir(); //si el vector esta lleno, si lo esta se expande
         int i = Contenido - 1; // indice de la ultima palabra en el vector
         while (i >= 0 && Comparar(MiVector[i], nuevaPalabra) > 0) { //ve si la nueva palabra es menor
             MiVector[i + 1] = MiVector[i]; //muebe la palabra si en menor
@@ -125,7 +126,6 @@ struct Solucion1 {
         ++Contenido; //aumenta la cantidad de palabras en el vector
         ActualizarIndices(); //actualiza los indices de las palabras iniciales de cada letra
         cout << nuevaPalabra << " añadida al vector!\n"; //avisa que fue añadida con exito
-        if (Contenido == Capacidad) Expandir(); //si el vector esta lleno espues de añadir la palabra y si lo esta, se expande
     }
 
     // funcion de eliminar palabra
