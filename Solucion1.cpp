@@ -13,10 +13,10 @@ struct Solucion1 {
     int Indices[26]; //array que contiene el indice de la primera palabra que empieza con cada letra
 
     //constructor del vector
-    Solucion1(){
-        Capacidad = 20; //coloca la cantidad de palabras reservadas iniciales de MiVector como 20 palabras
+    Solucion1(int capInicial){ //recibe la capacidad inicial del vector dada por el usuario
+        Capacidad = capInicial; //capacidad inicial dada por el usuario
         Contenido = 0; //indica que MiVector inicia vacio
-        MiVector.reserve(Capacidad); //reserva la memoria inicial de las 20 palabras en MiVector
+        MiVector.reserve(Capacidad); //reserva la memoria inicial
         for (int i = 0; i < 26; ++i) Indices[i] = -1; //define los indices como no encontrados
     }
 
@@ -108,11 +108,42 @@ struct Solucion1 {
         return -1; //return para la funcion que lo llame
     }
 
+    //funcion que verifica existencia sin imprimir (usa para evitar duplicados)
+    bool Existe(uchar* palabra) {
+        int letra = InicialIndice(palabra);
+        if (letra < 0) return false;
+        int inicio = Indices[letra];
+        if (inicio == -1) return false;
+        int fin = Contenido - 1;
+        for (int j = letra + 1; j < 26; ++j) {
+            if (Indices[j] != -1) {
+                fin = Indices[j] - 1;
+                break;
+            }
+        }
+        while (inicio <= fin) {
+            int mitad = inicio + (fin - inicio) / 2;
+            int comp = Comparar(MiVector[mitad], palabra);
+            if (comp == 0) return true;
+            if (comp == -1) inicio = mitad + 1;
+            else fin = mitad - 1;
+        }
+        return false;
+    }
+
     //funcion para insertar palabras
     void insertar(uchar* nuevaPalabra) { //recibe una palabra a insertar
+        if (Existe(nuevaPalabra)) {
+            cout << nuevaPalabra << " ya existe en el vector!\n";
+            return;
+        }
+
         int i = Contenido - 1; // indice de la ultima palabra en el vector
+        // Asegurar espacio en MiVector
+        if ((int)MiVector.size() < Contenido + 1) MiVector.resize(Contenido + 1);
+
         while (i >= 0 && Comparar(MiVector[i], nuevaPalabra) > 0) { //ve si la nueva palabra es menor
-            MiVector[i + 1] = MiVector[i]; //muebe la palabra si en menor
+            MiVector[i + 1] = MiVector[i]; //mueve la palabra si en menor
             --i; //se mueve a la palabra anterior
         }
 

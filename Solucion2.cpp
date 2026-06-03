@@ -108,12 +108,69 @@ public:
             actual = actual->next;
         }
 
+        if (actual && Comparar(actual->key, palabra) == 0) { //evita insertar duplicados
+            cout << "Palabra duplicada encontrada en el nivel base" << endl;
+            delete newNode;
+            return;
+        }
+
         if (!anterior) { //si no hay nodo anterior, la nueva palabra es la nueva cabeza del nivel base
             newNode->next = heads[0];
             heads[0] = newNode;
         } else { //si hay anterior, inserta el nodo normalmente
             newNode->next = actual; 
             anterior->next = newNode;
+        }
+    }
+
+    void InsertarBaseConNiveles(uchar* palabra) { //inserta en base usando los niveles superiores para facilitar la búsqueda
+        if (heads.empty()) { //si no hay niveles, crea el nivel base
+            heads.push_back(nullptr);
+        }
+
+        if (heads.size() == 1 || !heads.back()) { //si no hay niveles superiores válidos, usa inserción directa
+            InsertarBase(palabra);
+            return;
+        }
+
+        int nivel = (int)heads.size() - 1; //empieza en el nivel mas alto
+        Nodo* actual = heads[nivel];
+        Nodo* anteriorBase = nullptr;
+
+        while (nivel >= 0) { //mientras haya niveles para revisar
+            while (actual->next && Comparar(actual->next->key, palabra) <= 0) {
+                actual = actual->next; //compara y avanza si la siguiente palabra es menor o igual a la actual
+            }
+
+            if (nivel == 0) { //si llegamos al nivel base, guardamos el nodo anterior para insertar la nueva palabra
+                if (Comparar(actual->key, palabra) == 0) { //evita insertar duplicados en el nivel base
+                    cout << "Palabra duplicada encontrada en el nivel base" << endl;
+                    return;
+                }
+                if (Comparar(actual->key, palabra) < 0) {
+                    anteriorBase = actual;
+                } else {
+                    anteriorBase = nullptr;
+                }
+                break;
+            }
+
+            if (Comparar(actual->key, palabra) == 0) { //evita insertar duplicados en niveles superiores
+                cout << "Palabra duplicada encontrada en un nivel superior" << endl;
+                return;
+            }
+
+            actual = actual->abajo; //desciende al siguiente nivel
+            nivel--; //decrementa el nivel
+        }
+
+        Nodo* newNode = CrearNodo(palabra); //crea un nuevo nodo con la palabra dada
+        if (!anteriorBase) {
+            newNode->next = heads[0]; //si no hay nodo anterior, se inserta al inicio del nivel base
+            heads[0] = newNode;
+        } else {
+            newNode->next = anteriorBase->next; //si hay nodo anterior, se inserta después de este
+            anteriorBase->next = newNode;
         }
     }
 
