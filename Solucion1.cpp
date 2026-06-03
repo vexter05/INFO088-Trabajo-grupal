@@ -108,43 +108,17 @@ struct Solucion1 {
         return -1; //return para la funcion que lo llame
     }
 
-    //funcion que verifica existencia sin imprimir (usa para evitar duplicados)
-    bool Existe(uchar* palabra) {
-        int letra = InicialIndice(palabra);
-        if (letra < 0) return false;
-        int inicio = Indices[letra];
-        if (inicio == -1) return false;
-        int fin = Contenido - 1;
-        for (int j = letra + 1; j < 26; ++j) {
-            if (Indices[j] != -1) {
-                fin = Indices[j] - 1;
-                break;
-            }
-        }
-        while (inicio <= fin) {
-            int mitad = inicio + (fin - inicio) / 2;
-            int comp = Comparar(MiVector[mitad], palabra);
-            if (comp == 0) return true;
-            if (comp == -1) inicio = mitad + 1;
-            else fin = mitad - 1;
-        }
-        return false;
-    }
-
     //funcion para insertar palabras
     void insertar(uchar* nuevaPalabra) { //recibe una palabra a insertar
-        if (Existe(nuevaPalabra)) {
-            cout << nuevaPalabra << " ya existe en el vector!\n";
-            return;
+        int i = Contenido - 1; // indice de la ultima palabra en el vector
+        while (i >= 0 && Comparar(MiVector[i], nuevaPalabra) > 0) { //ve si la nueva palabra es menor
+            MiVector[i + 1] = MiVector[i]; //muebe la palabra si en menor
+            --i; //se mueve a la palabra anterior
         }
 
-        int i = Contenido - 1; // indice de la ultima palabra en el vector
-        // Asegurar espacio en MiVector
-        if ((int)MiVector.size() < Contenido + 1) MiVector.resize(Contenido + 1);
-
-        while (i >= 0 && Comparar(MiVector[i], nuevaPalabra) > 0) { //ve si la nueva palabra es menor
-            MiVector[i + 1] = MiVector[i]; //mueve la palabra si en menor
-            --i; //se mueve a la palabra anterior
+        if (i >= 0 && Comparar(MiVector[i], nuevaPalabra) == 0) {
+            cout << nuevaPalabra << " ya existe en el vector!\n";
+            return; //evita intsertar la palabra si ya existe
         }
 
         MiVector[i + 1] = nuevaPalabra; //añade la palabra nueva en la celda correspondiente
