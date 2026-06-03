@@ -351,6 +351,3 @@ public:
         }
     }
 };
-
-int main() {
-}
